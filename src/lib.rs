@@ -130,6 +130,7 @@ pub struct EguiMq {
     native_dpi_scale: f32,
     egui_ctx: egui::Context,
     egui_input: egui::RawInput,
+    egui_input_state: egui::InputState,
     painter: painter::Painter,
     #[cfg(target_os = "macos")]
     clipboard: Option<copypasta::ClipboardContext>,
@@ -140,14 +141,15 @@ pub struct EguiMq {
 impl EguiMq {
     pub fn new(mq_ctx: &mut dyn mq::RenderingBackend) -> Self {
         let native_dpi_scale = miniquad::window::dpi_scale();
+        let mut egui_input_state = egui::InputState::default();
+        egui_input_state.pixels_per_point = native_dpi_scale;
+
         Self {
             native_dpi_scale,
             egui_ctx: egui::Context::default(),
             painter: painter::Painter::new(mq_ctx),
-            egui_input: egui::RawInput {
-                pixels_per_point: Some(native_dpi_scale),
-                ..Default::default()
-            },
+            egui_input: Default::default(),
+            egui_input_state,
             #[cfg(target_os = "macos")]
             clipboard: init_clipboard(),
             shapes: None,
@@ -173,7 +175,7 @@ impl EguiMq {
         if self.native_dpi_scale != miniquad::window::dpi_scale() {
             // DPI scale change (maybe new monitor?). Tell egui to change:
             self.native_dpi_scale = miniquad::window::dpi_scale();
-            self.egui_input.pixels_per_point = Some(self.native_dpi_scale);
+            self.egui_input_state.pixels_per_point = self.native_dpi_scale;
         }
 
         let full_output = self
@@ -185,6 +187,8 @@ impl EguiMq {
             repaint_after: _, // miniquad always runs at full framerate
             textures_delta,
             shapes,
+            // pixels_per_point: _,
+            // viewport_output: _
         } = full_output;
 
         if self.shapes.is_some() {
@@ -198,7 +202,6 @@ impl EguiMq {
             open_url,
             copied_text,
             events: _,                    // no screen reader
-            text_cursor_pos: _,           // no IME
             mutable_text_under_cursor: _, // no IME
             ..
         } = platform_output;
@@ -322,7 +325,8 @@ impl EguiMq {
                 key,
                 pressed: true,
                 modifiers,
-                repeat: false, // egui will set this for us
+                repeat: false, // egui will set this for us,
+                // physical_key: None,
             })
         }
     }
@@ -336,7 +340,8 @@ impl EguiMq {
                 key,
                 pressed: false,
                 modifiers,
-                repeat: false, // egui will set this for us
+                repeat: false, // egui will set this for us,
+                // physical_key: None,
             })
         }
     }

@@ -35,6 +35,8 @@ impl mq::EventHandler for Stage {
 
         let dpi_scale = mq::window::dpi_scale();
 
+        let mut dpi_changed = false;
+
         // Run the UI code:
         self.egui_mq.run(&mut *self.mq_ctx, |_mq_ctx, egui_ctx| {
             if self.show_egui_demo_windows {
@@ -68,6 +70,7 @@ impl mq::EventHandler for Stage {
 
             // Don't change scale while dragging the slider
             if !egui_ctx.is_using_pointer() {
+                dpi_changed = egui_ctx.pixels_per_point() != self.pixels_per_point;
                 egui_ctx.set_pixels_per_point(self.pixels_per_point);
             }
 
@@ -79,6 +82,13 @@ impl mq::EventHandler for Stage {
                     });
             });
         });
+
+
+        // i have no idea why this is needed, but without it, we panic on the call to tessellate
+        // TODO: fix crash when changing dpi slider
+        if dpi_changed {
+            return;
+        };
 
         // Draw things behind egui here
 

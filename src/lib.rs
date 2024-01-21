@@ -184,10 +184,11 @@ impl EguiMq {
 
         let egui::FullOutput {
             platform_output,
+            repaint_after: _, // miniquad always runs at full framerate
             textures_delta,
             shapes,
-            pixels_per_point: _,
-            viewport_output: _
+            // pixels_per_point: _,
+            // viewport_output: _
         } = full_output;
 
         if self.shapes.is_some() {
@@ -228,7 +229,7 @@ impl EguiMq {
     /// Must be called after `end_frame`.
     pub fn draw(&mut self, mq_ctx: &mut dyn mq::RenderingBackend) {
         if let Some(shapes) = self.shapes.take() {
-            let meshes = self.egui_ctx.tessellate(shapes, self.native_dpi_scale);
+            let meshes = self.egui_ctx.tessellate(shapes);
             self.painter.paint_and_update_textures(
                 mq_ctx,
                 meshes,
@@ -325,7 +326,7 @@ impl EguiMq {
                 pressed: true,
                 modifiers,
                 repeat: false, // egui will set this for us,
-                physical_key: None,
+                // physical_key: None,
             })
         }
     }
@@ -340,7 +341,7 @@ impl EguiMq {
                 pressed: false,
                 modifiers,
                 repeat: false, // egui will set this for us,
-                physical_key: None,
+                // physical_key: None,
             })
         }
     }
